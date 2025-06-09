@@ -1,0 +1,177 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+# KONFIGURACJA ZAKRESÓW DAT - EDYTUJ TUTAJ
+START_YEAR = 1980 # Rok początkowy dla analizy
+END_YEAR = 2024    # Rok końcowy dla analizy
+RECENT_START_YEAR = 2020  # Rok początkowy dla wykresu słupkowego z ostatnimi latami
+
+# Wczytywanie danych z plików CSV
+poland_df = pd.read_csv('./inflacja_w_polsce_a_w_najwszekszych_gospodarkach/poland_inflation_yearly.csv')
+china_df = pd.read_csv('./inflacja_w_polsce_a_w_najwszekszych_gospodarkach/china_inflation_yearly.csv')
+germany_df = pd.read_csv('./inflacja_w_polsce_a_w_najwszekszych_gospodarkach/germany_inflation_yearly.csv')
+usa_df = pd.read_csv('./inflacja_w_polsce_a_w_najwszekszych_gospodarkach/usa_inflation_yearly.csv')
+india_df = pd.read_csv('./inflacja_w_polsce_a_w_najwszekszych_gospodarkach/india_inflation_yearly.csv')
+eu_df = pd.read_csv('./inflacja_w_polsce_a_w_najwszekszych_gospodarkach/eu_inflation_yearly.csv')
+world_df = pd.read_csv('./inflacja_w_polsce_a_w_najwszekszych_gospodarkach/world_inflation_yearly.csv')
+
+# Przygotowanie danych do analizy
+# Łączenie danych w jeden DataFrame dla wybranego zakresu lat
+common_years = range(START_YEAR, END_YEAR + 1)
+data_dict = {
+    'Year': common_years,
+    'Poland': [poland_df[poland_df['Year'] == year]['Inflation'].values[0] if year in poland_df['Year'].values else np.nan for year in common_years],
+    'China': [china_df[china_df['Year'] == year]['Inflation'].values[0] if year in china_df['Year'].values else np.nan for year in common_years],
+    'Germany': [germany_df[germany_df['Year'] == year]['Inflation'].values[0] if year in germany_df['Year'].values else np.nan for year in common_years],
+    'USA': [usa_df[usa_df['Year'] == year]['Inflation'].values[0] if year in usa_df['Year'].values else np.nan for year in common_years],
+    'India': [india_df[india_df['Year'] == year]['Inflation'].values[0] if year in india_df['Year'].values else np.nan for year in common_years],
+    'EU': [eu_df[eu_df['Year'] == year]['Inflation'].values[0] if year in eu_df['Year'].values else np.nan for year in common_years],
+    'World': [world_df[world_df['Year'] == year]['Inflation'].values[0] if year in world_df['Year'].values else np.nan for year in common_years]
+}
+combined_df = pd.DataFrame(data_dict).set_index('Year')
+
+# Funkcja do ręcznej regresji liniowej (metoda najmniejszych kwadratów)
+def manual_linear_regression(df, country_name, start_year=START_YEAR, end_year=END_YEAR):
+    df_subset = df[(df['Year'] >= start_year) & (df['Year'] <= end_year)][['Year', 'Inflation']]
+    X = df_subset['Year'].values
+    y = df_subset['Inflation'].values
+    
+    # Obliczenie średnich
+    x_mean = np.mean(X)
+    y_mean = np.mean(y)
+    
+    # Obliczenie nachylenia (slope)
+    numerator = np.sum((X - x_mean) * (y - y_mean))
+    denominator = np.sum((X - x_mean) ** 2)
+    slope = numerator / denominator if denominator != 0 else 0
+    
+    # Obliczenie wyrazu wolnego (intercept)
+    intercept = y_mean - slope * x_mean
+    
+    # Obliczenie przewidywanych wartości
+    y_pred = slope * X + intercept
+    
+    return X, y_pred, slope, intercept
+
+# Regresja liniowa dla każdego kraju (używa globalnych zakresów dat)
+poland_X, poland_y_pred, poland_slope, poland_intercept = manual_linear_regression(poland_df, 'Polska')
+china_X, china_y_pred, china_slope, china_intercept = manual_linear_regression(china_df, 'Chiny')
+germany_X, germany_y_pred, germany_slope, germany_intercept = manual_linear_regression(germany_df, 'Niemcy')
+usa_X, usa_y_pred, usa_slope, usa_intercept = manual_linear_regression(usa_df, 'USA')
+india_X, india_y_pred, india_slope, india_intercept = manual_linear_regression(india_df, 'Indie')
+eu_X, eu_y_pred, eu_slope, eu_intercept = manual_linear_regression(eu_df, 'UE')
+world_X, world_y_pred, world_slope, world_intercept = manual_linear_regression(world_df, 'Świat')
+
+# Filtrowanie danych do wybranego zakresu lat dla wykresów
+poland_filtered = poland_df[(poland_df['Year'] >= START_YEAR) & (poland_df['Year'] <= END_YEAR)]
+china_filtered = china_df[(china_df['Year'] >= START_YEAR) & (china_df['Year'] <= END_YEAR)]
+germany_filtered = germany_df[(germany_df['Year'] >= START_YEAR) & (germany_df['Year'] <= END_YEAR)]
+usa_filtered = usa_df[(usa_df['Year'] >= START_YEAR) & (usa_df['Year'] <= END_YEAR)]
+india_filtered = india_df[(india_df['Year'] >= START_YEAR) & (india_df['Year'] <= END_YEAR)]
+eu_filtered = eu_df[(eu_df['Year'] >= START_YEAR) & (eu_df['Year'] <= END_YEAR)]
+world_filtered = world_df[(world_df['Year'] >= START_YEAR) & (world_df['Year'] <= END_YEAR)]
+
+# 1. Wykres liniowy - inflacja w czasie dla wszystkich krajów z liniami regresji
+plt.figure(figsize=(16, 10))
+plt.plot(poland_filtered['Year'], poland_filtered['Inflation'], label='Polska', marker='o', linewidth=2, markersize=4)
+plt.plot(china_filtered['Year'], china_filtered['Inflation'], label='Chiny', marker='s', linewidth=2, markersize=4)
+plt.plot(germany_filtered['Year'], germany_filtered['Inflation'], label='Niemcy', marker='^', linewidth=2, markersize=4)
+plt.plot(usa_filtered['Year'], usa_filtered['Inflation'], label='USA', marker='d', linewidth=2, markersize=4)
+plt.plot(india_filtered['Year'], india_filtered['Inflation'], label='Indie', marker='x', linewidth=2, markersize=6)
+plt.plot(eu_filtered['Year'], eu_filtered['Inflation'], label='UE', marker='v', linewidth=2, markersize=4)
+plt.plot(world_filtered['Year'], world_filtered['Inflation'], label='Świat', marker='*', linewidth=3, markersize=6)
+
+# Dodanie linii regresji
+plt.plot(poland_X, poland_y_pred, '--', label=f'Polska (Regresja: y={poland_slope:.3f}x+{poland_intercept:.1f})', color='blue', alpha=0.7)
+plt.plot(china_X, china_y_pred, '--', label=f'Chiny (Regresja: y={china_slope:.3f}x+{china_intercept:.1f})', color='orange', alpha=0.7)
+plt.plot(germany_X, germany_y_pred, '--', label=f'Niemcy (Regresja: y={germany_slope:.3f}x+{germany_intercept:.1f})', color='green', alpha=0.7)
+plt.plot(usa_X, usa_y_pred, '--', label=f'USA (Regresja: y={usa_slope:.3f}x+{usa_intercept:.1f})', color='red', alpha=0.7)
+plt.plot(india_X, india_y_pred, '--', label=f'Indie (Regresja: y={india_slope:.3f}x+{india_intercept:.1f})', color='purple', alpha=0.7)
+plt.plot(eu_X, eu_y_pred, '--', label=f'UE (Regresja: y={eu_slope:.3f}x+{eu_intercept:.1f})', color='brown', alpha=0.7)
+plt.plot(world_X, world_y_pred, '--', label=f'Świat (Regresja: y={world_slope:.3f}x+{world_intercept:.1f})', color='black', alpha=0.7)
+
+plt.title(f'Inflacja w Polsce, Chinach, Niemczech, USA, Indiach, UE i na Świecie ({START_YEAR}–{END_YEAR}) z regresją liniową', fontsize=14)
+plt.xlabel('Rok')
+plt.ylabel('Inflacja (%)')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+# 2. Wykres słupkowy - inflacja w ostatnich latach (konfigurowalny zakres)
+recent_years = range(RECENT_START_YEAR, END_YEAR + 1)
+bar_data = {
+    'Poland': [poland_df[poland_df['Year'] == year]['Inflation'].values[0] if year in poland_df['Year'].values else np.nan for year in recent_years],
+    'China': [china_df[china_df['Year'] == year]['Inflation'].values[0] if year in china_df['Year'].values else np.nan for year in recent_years],
+    'Germany': [germany_df[germany_df['Year'] == year]['Inflation'].values[0] if year in germany_df['Year'].values else np.nan for year in recent_years],
+    'USA': [usa_df[usa_df['Year'] == year]['Inflation'].values[0] if year in usa_df['Year'].values else np.nan for year in recent_years],
+    'India': [india_df[india_df['Year'] == year]['Inflation'].values[0] if year in india_df['Year'].values else np.nan for year in recent_years],
+    'EU': [eu_df[eu_df['Year'] == year]['Inflation'].values[0] if year in eu_df['Year'].values else np.nan for year in recent_years],
+    'World': [world_df[world_df['Year'] == year]['Inflation'].values[0] if year in world_df['Year'].values else np.nan for year in recent_years]
+}
+bar_df = pd.DataFrame(bar_data, index=[str(year) for year in recent_years])
+
+# Tworzenie wykresu słupkowego
+plt.figure(figsize=(12, 7))
+bar_df.plot(kind='bar', figsize=(12, 7), width=0.8)
+plt.title(f'Porównanie inflacji w latach {RECENT_START_YEAR}–{END_YEAR}')
+plt.xlabel('Rok')
+plt.ylabel('Inflacja (%)')
+plt.legend(title='Kraj/Region', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.grid(True, axis='y', alpha=0.3)
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# 3. Macierz korelacji (używa globalnego zakresu dat)
+correlation_matrix = combined_df.corr(method='pearson')
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', vmin=-1, vmax=1, center=0, 
+            square=True, linewidths=0.5, cbar_kws={"shrink": .8})
+plt.title(f'Macierz korelacji inflacji ({START_YEAR}–{END_YEAR})')
+plt.tight_layout()
+plt.show()
+
+# 4. Dodatkowe statystyki dla wybranego okresu
+print(f"\n=== STATYSTYKI INFLACJI DLA OKRESU {START_YEAR}-{END_YEAR} ===")
+print(f"{'Kraj/Region':<10} {'Średnia':<8} {'Mediana':<8} {'Odch.std':<8} {'Min':<6} {'Max':<6}")
+print("-" * 50)
+
+countries_data = {
+    'Polska': poland_filtered['Inflation'],
+    'Chiny': china_filtered['Inflation'],
+    'Niemcy': germany_filtered['Inflation'],
+    'USA': usa_filtered['Inflation'],
+    'Indie': india_filtered['Inflation'],
+    'UE': eu_filtered['Inflation'],
+    'Świat': world_filtered['Inflation']
+}
+
+for country, data in countries_data.items():
+    if not data.empty:
+        mean_val = data.mean()
+        median_val = data.median()
+        std_val = data.std()
+        min_val = data.min()
+        max_val = data.max()
+        print(f"{country:<10} {mean_val:<8.2f} {median_val:<8.2f} {std_val:<8.2f} {min_val:<6.2f} {max_val:<6.2f}")
+
+print(f"\n=== WSPÓŁCZYNNIKI REGRESJI LINIOWEJ ({START_YEAR}-{END_YEAR}) ===")
+print(f"{'Kraj/Region':<10} {'Nachylenie':<12} {'Trend':<15}")
+print("-" * 40)
+
+regression_data = [
+    ('Polska', poland_slope),
+    ('Chiny', china_slope),
+    ('Niemcy', germany_slope),
+    ('USA', usa_slope),
+    ('Indie', india_slope),
+    ('UE', eu_slope),
+    ('Świat', world_slope)
+]
+
+for country, slope in regression_data:
+    trend = "Rosnący" if slope > 0 else "Malejący" if slope < 0 else "Stały"
+    print(f"{country:<10} {slope:<12.4f} {trend:<15}")
