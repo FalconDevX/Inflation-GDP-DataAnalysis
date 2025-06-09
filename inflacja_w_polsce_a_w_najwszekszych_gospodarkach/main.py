@@ -63,13 +63,14 @@ eu_filtered = eu_df[(eu_df['Year'] >= START_YEAR) & (eu_df['Year'] <= END_YEAR)]
 world_filtered = world_df[(world_df['Year'] >= START_YEAR) & (world_df['Year'] <= END_YEAR)]
 
 plt.figure(figsize=(16, 10))
-plt.plot(poland_filtered['Year'], poland_filtered['Inflation'], label='Polska', marker='o', linewidth=2, markersize=4)
-plt.plot(china_filtered['Year'], china_filtered['Inflation'], label='Chiny', marker='s', linewidth=2, markersize=4)
-plt.plot(germany_filtered['Year'], germany_filtered['Inflation'], label='Niemcy', marker='^', linewidth=2, markersize=4)
-plt.plot(usa_filtered['Year'], usa_filtered['Inflation'], label='USA', marker='d', linewidth=2, markersize=4)
-plt.plot(india_filtered['Year'], india_filtered['Inflation'], label='Indie', marker='x', linewidth=2, markersize=6)
-plt.plot(eu_filtered['Year'], eu_filtered['Inflation'], label='UE', marker='v', linewidth=2, markersize=4)
-plt.plot(world_filtered['Year'], world_filtered['Inflation'], label='Świat', marker='*', linewidth=3, markersize=6)
+plt.plot(poland_filtered['Year'], poland_filtered['Inflation'], label='Polska', marker='o', linewidth=2.2, markersize=4, color='#1f77b4')
+plt.plot(china_filtered['Year'], china_filtered['Inflation'], label='Chiny', marker='s', linewidth=2.2, markersize=4, color='#ff7f0e')
+plt.plot(germany_filtered['Year'], germany_filtered['Inflation'], label='Niemcy', marker='^', linewidth=2.2, markersize=4, color='#2ca02c')
+plt.plot(usa_filtered['Year'], usa_filtered['Inflation'], label='USA', marker='d', linewidth=2.2, markersize=4, color='#d62728')
+plt.plot(india_filtered['Year'], india_filtered['Inflation'], label='Indie', marker='x', linewidth=2.2, markersize=6, color='#9467bd')
+plt.plot(eu_filtered['Year'], eu_filtered['Inflation'], label='UE', marker='v', linewidth=2.2, markersize=4, color='#8c564b')
+plt.plot(world_filtered['Year'], world_filtered['Inflation'], label='Świat', marker='*', linewidth=2.8, markersize=6, color='#e377c2')
+
 
 plt.plot(poland_X, poland_y_pred, '--', label=f'Polska (Regresja: y={poland_slope:.3f}x+{poland_intercept:.1f})', color='blue', alpha=0.7)
 plt.plot(china_X, china_y_pred, '--', label=f'Chiny (Regresja: y={china_slope:.3f}x+{china_intercept:.1f})', color='orange', alpha=0.7)
@@ -181,13 +182,13 @@ r_squared_pg = 1 - (ss_res / ss_tot)
 
 
 plt.figure(figsize=(8, 6))
-plt.scatter(X, y, label='Dane rzeczywiste', alpha=0.7)
-plt.plot(X, y_pred_pg, color='red', label=f'Regresja: y = {slope_pg:.3f}x + {intercept_pg:.3f}')
+plt.scatter(X, y, label='Dane rzeczywiste', alpha=0.8, color='#1f77b4', edgecolors='black')  # niebieski z obwódką
+plt.plot(X, y_pred_pg, color='#d62728', linewidth=2.5, label=f'Regresja: y = {slope_pg:.3f}x + {intercept_pg:.3f}')
 plt.xlabel('Inflacja w Niemczech (%)')
 plt.ylabel('Inflacja w Polsce (%)')
-plt.title(f'Regresja liniowa: Inflacja Polska vs Niemcy ({START_YEAR}-{END_YEAR})\n')
+plt.title(f'Regresja liniowa: Inflacja Polska vs Niemcy ({START_YEAR}-{END_YEAR})\n', fontsize=13)
 plt.legend()
-plt.grid(True)
+plt.grid(True, linestyle='--', alpha=0.5)
 plt.tight_layout()
 plt.show()
 
